@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SaaS Input Mask — Financial Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="calculations.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:     #0A1525; --bg2: #0F1C2E; --bg3: #162438; --bg4: #1E3050;
+    --blue:   #2563EB; --blue-l: #60A5FA;
+    --teal:   #0D9488; --teal-l: #2DD4BF;
+    --amber:  #D97706; --amber-l: #FCD34D;
+    --green:  #059669; --green-l: #34D399;
+    --rose:   #E11D48; --rose-l: #FB7185;
+    --purple: #7C3AED; --purple-l: #A78BFA;
+    --text:   #E2E8F0; --text2: #94A3B8; --text3: #64748B;
+    --line:   rgba(255,255,255,0.07); --line2: rgba(255,255,255,0.12);
+    --font-b: 'Outfit', sans-serif; --font-m: 'DM Mono', monospace;
+    --r: 8px; --r2: 12px; --r3: 16px;
+  }
+  body { font-family: var(--font-b); background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--bg2); border-bottom: 1px solid var(--line2);
+    padding: 16px 32px; display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 20;
+  }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .logo { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg,var(--blue),var(--teal)); display: flex; align-items: center; justify-content: center; }
+  .logo svg { width: 16px; height: 16px; fill: #fff; }
+  .header-title { font-size: 15px; font-weight: 600; }
+  .header-sub { font-size: 11px; color: var(--text3); font-family: var(--font-m); margin-top: 2px; }
+  .header-right { display: flex; gap: 10px; align-items: center; }
+  .btn {
+    padding: 8px 16px; border-radius: var(--r); font-size: 13px; font-weight: 500;
+    cursor: pointer; border: 1px solid; font-family: var(--font-b); transition: all .15s;
+  }
+  .btn-primary { background: linear-gradient(135deg,var(--blue),var(--teal)); border-color: transparent; color: #fff; }
+  .btn-primary:hover { opacity: .88; }
+  .btn-secondary { background: transparent; border-color: var(--line2); color: var(--text2); }
+  .btn-secondary:hover { background: var(--bg3); color: var(--text); }
+  .btn-ghost { background: transparent; border-color: transparent; color: var(--text3); font-size: 12px; }
+  .btn-ghost:hover { color: var(--text); }
+
+  /* ── LAYOUT ── */
+  .layout { display: grid; grid-template-columns: 1fr 340px; gap: 0; min-height: calc(100vh - 65px); }
+  .inputs-col { padding: 24px 28px; overflow-y: auto; border-right: 1px solid var(--line); }
+  .outputs-col { padding: 24px 24px; overflow-y: auto; background: var(--bg2); position: sticky; top: 65px; max-height: calc(100vh - 65px); }
+
+  /* ── INPUT GROUPS ── */
+  .group { margin-bottom: 20px; }
+  .group-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 16px; background: var(--bg3);
+    border: 1px solid var(--line2); border-bottom: none;
+    border-radius: var(--r2) var(--r2) 0 0;
+    cursor: pointer; user-select: none;
+  }
+  .group-header:hover { background: var(--bg4); }
+  .group-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .group-name { font-size: 13px; font-weight: 600; flex: 1; }
+  .group-count { font-size: 10px; color: var(--text3); font-family: var(--font-m); }
+  .group-chevron { font-size: 10px; color: var(--text3); transition: transform .2s; }
+  .group.collapsed .group-chevron { transform: rotate(-90deg); }
+  .group.collapsed .group-body { display: none; }
+
+  .group-body {
+    border: 1px solid var(--line2); border-top: none;
+    border-radius: 0 0 var(--r2) var(--r2); overflow: hidden;
+  }
+  .input-row {
+    display: grid; grid-template-columns: 1fr 110px 110px;
+    padding: 0; border-bottom: 1px solid var(--line);
+    align-items: stretch;
+  }
+  .input-row:last-child { border-bottom: none; }
+  .input-cell { padding: 10px 14px; }
+  .input-row-header { background: var(--bg4); }
+  .input-label { font-size: 12px; color: var(--text2); }
+  .input-hint { font-size: 10px; color: var(--text3); font-family: var(--font-m); margin-top: 3px; }
+  .input-col-header { font-size: 10px; color: var(--text3); font-family: var(--font-m); text-align: center; display: flex; align-items: center; justify-content: center; border-left: 1px solid var(--line); }
+
+  .inp-wrap { display: flex; align-items: center; border-left: 1px solid var(--line); position: relative; }
+  .inp {
+    width: 100%; padding: 10px 10px 10px 12px;
+    background: transparent; border: none; outline: none;
+    font-family: var(--font-m); font-size: 12px; font-weight: 500;
+    text-align: right; transition: background .15s; color: var(--blue-l);
+  }
+  .inp.pct { color: var(--teal-l); }
+  .inp:focus { background: rgba(37,99,235,.08); }
+  .inp-suffix {
+    font-size: 10px; color: var(--text3); padding-right: 10px;
+    pointer-events: none; white-space: nowrap;
+  }
+  .inp-changed { background: rgba(37,99,235,.06) !important; }
+
+  /* derived rows */
+  .derived-row { background: var(--bg4); }
+  .derived-val { font-size: 12px; font-family: var(--font-m); font-weight: 500; color: var(--green-l); text-align: right; padding: 10px 14px; border-left: 1px solid var(--line); display: flex; align-items: center; justify-content: flex-end; }
+
+  /* ── OUTPUT PANEL ── */
+  .out-section { margin-bottom: 20px; }
+  .out-title { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; font-family: var(--font-m); margin-bottom: 10px; }
+  .out-card { background: var(--bg3); border: 1px solid var(--line2); border-radius: var(--r2); overflow: hidden; margin-bottom: 12px; }
+  .out-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 14px; border-bottom: 1px solid var(--line); }
+  .out-row:last-child { border-bottom: none; }
+  .out-label { font-size: 11px; color: var(--text2); }
+  .out-val { font-size: 13px; font-weight: 600; font-family: var(--font-m); }
+  .out-badge { font-size: 9px; font-family: var(--font-m); padding: 2px 6px; border-radius: 4px; border: 1px solid; margin-left: 6px; }
+  .b-good  { color: var(--green-l);  border-color: rgba(52,211,153,.3);  background: rgba(52,211,153,.08);  }
+  .b-warn  { color: var(--amber-l);  border-color: rgba(252,211,77,.3);  background: rgba(252,211,77,.08);  }
+  .b-bad   { color: var(--rose-l);   border-color: rgba(251,113,133,.3); background: rgba(251,113,133,.08); }
+  .c-good  { color: var(--green-l); }
+  .c-warn  { color: var(--amber-l); }
+  .c-bad   { color: var(--rose-l);  }
+  .c-blue  { color: var(--blue-l);  }
+  .c-purple{ color: var(--purple-l);}
+
+  /* ARR bridge mini */
+  .bridge { padding: 10px 14px; }
+  .bridge-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; font-size: 11px; }
+  .bridge-bar-track { flex: 1; height: 14px; background: var(--bg4); border-radius: 2px; overflow: hidden; }
+  .bridge-bar { height: 100%; border-radius: 2px; }
+  .bridge-amount { width: 70px; text-align: right; font-family: var(--font-m); font-size: 10px; color: var(--text3); }
+  .bridge-label { width: 100px; flex-shrink: 0; }
+
+  /* scenario tabs */
+  .scenario-tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+  .sc-tab { padding: 5px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; border: 1px solid var(--line2); background: transparent; color: var(--text2); font-family: var(--font-b); transition: all .15s; }
+  .sc-tab.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .sc-tab:hover:not(.active) { background: var(--bg3); color: var(--text); }
+
+  /* period toggle */
+  .period-tabs { display: flex; background: var(--bg3); border: 1px solid var(--line2); border-radius: var(--r); padding: 3px; gap: 3px; }
+  .per-tab { flex: 1; padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; border: none; background: transparent; color: var(--text3); font-family: var(--font-b); transition: all .15s; text-align: center; }
+  .per-tab.active { background: var(--bg); color: var(--text); }
+
+  /* legend */
+  .legend { display: flex; gap: 14px; margin-top: 16px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--text3); font-family: var(--font-m); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+
+  /* toast */
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--bg3); border: 1px solid var(--line2); border-radius: var(--r2); padding: 10px 20px; font-size: 13px; color: var(--green-l); display: none; z-index: 100; font-family: var(--font-m); box-shadow: 0 8px 32px rgba(0,0,0,.4); }
+  .toast.show { display: block; animation: slideup .25s ease; }
+  @keyframes slideup { from { opacity:0; transform: translateX(-50%) translateY(10px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
+
+  @media (max-width: 820px) {
+    .layout { grid-template-columns: 1fr; }
+    .outputs-col { position: static; max-height: none; border-top: 1px solid var(--line); }
+    .header { padding: 12px 16px; }
+    .inputs-col { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast">✓ Model recalculated</div>
+
+<header class="header">
+  <div class="header-left">
+    <div class="logo">
+      <svg viewBox="0 0 24 24"><path d="M3 3h8v8H3zm10 0h8v8h-8zM3 13h8v8H3zm13 3a5 5 0 1 1 0-1z"/></svg>
+    </div>
+    <div>
+      <div class="header-title">SaaS Financial Model — Input Mask</div>
+      <div class="header-sub">Edit inputs · Live P&L output · Export JSON</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <button class="btn btn-ghost" onclick="resetAll()">↺ Reset defaults</button>
+    <button class="btn btn-secondary" onclick="exportJSON()">⬇ Export JSON</button>
+    <button class="btn btn-primary" onclick="recalcAll()">↻ Recalculate</button>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- ═══ INPUT COLUMNS ═══ -->
+  <div class="inputs-col">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div>
+        <div style="font-size:18px;font-weight:600">Assumption drivers</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:3px">All inputs flow into the live P&L on the right. Blue = $ value · Teal = % rate</div>
+      </div>
+      <div class="period-tabs" id="period-toggle">
+        <button class="per-tab active" onclick="setPeriod('both', this)">Y1 + Y2</button>
+        <button class="per-tab" onclick="setPeriod('y1', this)">Year 1</button>
+        <button class="per-tab" onclick="setPeriod('y2', this)">Year 2</button>
+      </div>
+    </div>
+
+    <div id="groups-container"></div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--blue-l)"></div>Dollar input</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--teal-l)"></div>Percentage input</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--green-l)"></div>Calculated</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--bg4);border:1px solid var(--line2)"></div>Derived row</div>
+    </div>
+  </div>
+
+  <!-- ═══ OUTPUT PANEL ═══ -->
+  <div class="outputs-col">
+
+    <div class="scenario-tabs" id="scenario-tabs">
+      <button class="sc-tab active" onclick="setScenario('base', this)">Base</button>
+      <button class="sc-tab" onclick="setScenario('bull', this)">Bull +20%</button>
+      <button class="sc-tab" onclick="setScenario('bear', this)">Bear −20%</button>
+    </div>
+
+    <div class="out-section">
+      <div class="out-title">P&L summary — Year 1</div>
+      <div class="out-card" id="pl-y1"></div>
+    </div>
+
+    <div class="out-section">
+      <div class="out-title">P&L summary — Year 2</div>
+      <div class="out-card" id="pl-y2"></div>
+    </div>
+
+    <div class="out-section">
+      <div class="out-title">ARR bridge (Y1 → Y2)</div>
+      <div class="out-card" id="arr-bridge"></div>
+    </div>
+
+    <div class="out-section">
+      <div class="out-title">Unit economics</div>
+      <div class="out-card" id="unit-econ"></div>
+    </div>
+
+    <div class="out-section">
+      <div class="out-title">Benchmark scorecard</div>
+      <div class="out-card" id="benchmarks"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// SCHEMA
+// ══════════════════════════════════════════════════════════
+const SCHEMA = [
+  {
+    group: "Revenue drivers", color: "#2563EB", open: true,
+    rows: [
+      { label: "Starting customers",         hint: "logos at period start",    id: "cust_start", y1: 50,     y2: 60,     type: "int" },
+      { label: "New customers added",         hint: "net new logos / year",     id: "cust_new",   y1: 120,    y2: 180,    type: "int" },
+      { label: "Churned customers",           hint: "logos lost during year",   id: "cust_churn", y1: 10,     y2: 15,     type: "int" },
+      { label: "Avg ARR / new customer",      hint: "annual contract value",    id: "arpa_new",   y1: 24000,  y2: 28000,  type: "usd" },
+      { label: "Avg ARR / existing customer", hint: "blended existing book",    id: "arpa_exist", y1: 22000,  y2: 25000,  type: "usd" },
+      { label: "Expansion MRR rate",          hint: "upsell & cross-sell",      id: "exp_rate",   y1: 5,      y2: 7,      type: "pct" },
+      { label: "Gross revenue churn rate",    hint: "% ARR lost from churn",    id: "churn_rate", y1: 8,      y2: 7,      type: "pct" },
+      { label: "NRR (calculated)",            hint: "1 − churn + expansion",   id: null,          derived: true },
+    ]
+  },
+  {
+    group: "COGS assumptions", color: "#0D9488", open: true,
+    rows: [
+      { label: "Hosting / DevOps",            hint: "% of total revenue",       id: "hosting_pct",  y1: 8,    y2: 7,      type: "pct" },
+      { label: "Support headcount",           hint: "FTEs",                     id: "sup_headcount", y1: 5,   y2: 8,      type: "int" },
+      { label: "Avg support cost (loaded)",   hint: "annual $ per FTE",         id: "sup_cost_per",  y1: 75000, y2: 78000, type: "usd" },
+      { label: "PS revenue %",                hint: "PS rev as % of total",     id: "ps_rev_pct",    y1: 8,   y2: 9,      type: "pct" },
+      { label: "PS gross margin",             hint: "margin on PS revenue",     id: "ps_margin",     y1: 20,  y2: 25,     type: "pct" },
+      { label: "Total COGS (calculated)",     hint: "hosting + support + PS",  id: null,             derived: true },
+    ]
+  },
+  {
+    group: "Sales & marketing", color: "#7C3AED", open: true,
+    rows: [
+      { label: "AE headcount",                hint: "quota-carrying reps",      id: "ae_headcount",  y1: 8,    y2: 14,    type: "int" },
+      { label: "Avg AE OTE (loaded)",         hint: "on-target earnings",       id: "ae_ote",         y1: 140000, y2: 145000, type: "usd" },
+      { label: "Sales commission rate",       hint: "% of new bookings",        id: "comm_rate",      y1: 10,   y2: 10,    type: "pct" },
+      { label: "Marketing spend",             hint: "demand gen + brand + events", id: "mktg_spend",  y1: 600000, y2: 900000, type: "usd" },
+      { label: "Total S&M (calculated)",      hint: "base + commissions + mktg", id: null,            derived: true },
+    ]
+  },
+  {
+    group: "Research & development", color: "#0D9488", open: false,
+    rows: [
+      { label: "Engineering headcount",       hint: "engineering FTEs",         id: "eng_headcount", y1: 12,  y2: 18,    type: "int" },
+      { label: "Avg engineer cost (loaded)",  hint: "annual $ per FTE",         id: "eng_cost_per",  y1: 130000, y2: 135000, type: "usd" },
+      { label: "R&D other costs",             hint: "tools, testing, IP",       id: "rd_other",      y1: 80000, y2: 120000, type: "usd" },
+      { label: "Total R&D (calculated)",      hint: "headcount × cost + other", id: null,            derived: true },
+    ]
+  },
+  {
+    group: "G&A", color: "#D97706", open: false,
+    rows: [
+      { label: "G&A headcount",               hint: "finance, HR, legal, exec", id: "ga_headcount",  y1: 4,   y2: 6,     type: "int" },
+      { label: "Avg G&A cost (loaded)",        hint: "annual $ per FTE",         id: "ga_cost_per",   y1: 110000, y2: 115000, type: "usd" },
+      { label: "Legal & accounting fees",      hint: "external advisors",        id: "legal_fees",    y1: 60000, y2: 75000, type: "usd" },
+      { label: "Office & facilities",          hint: "rent + utilities",         id: "office_cost",   y1: 120000, y2: 130000, type: "usd" },
+      { label: "Total G&A (calculated)",       hint: "headcount × cost + fees",  id: null,            derived: true },
+    ]
+  },
+  {
+    group: "Below the line", color: "#E11D48", open: false,
+    rows: [
+      { label: "D&A as % of revenue",         hint: "depreciation & amortization", id: "da_pct",     y1: 2,   y2: 1.5,   type: "pct" },
+      { label: "Interest expense",             hint: "net interest ($)",          id: "interest",     y1: 50000, y2: 40000, type: "usd" },
+      { label: "Effective tax rate",           hint: "corporate tax %",           id: "tax_rate",     y1: 21,  y2: 21,    type: "pct" },
+      { label: "CapEx as % of revenue",        hint: "hardware, leasehold",       id: "capex_pct",    y1: 2,   y2: 1.5,   type: "pct" },
+    ]
+  }
+];
+
+// ══════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════
+let scenario = 'base';
+let periodView = 'both';
+const vals = {};   // { id_y1: val, id_y2: val }
+
+// init from schema defaults
+SCHEMA.forEach(g => g.rows.filter(r => r.id).forEach(r => {
+  vals[r.id + '_y1'] = r.y1;
+  vals[r.id + '_y2'] = r.y2;
+}));
+
+// ══════════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════════
+function fmtUSD(n) {
+  if (n === null || n === undefined) return '—';
+  const a = Math.abs(n), s = n < 0 ? '-' : '';
+  if (a >= 1e6) return s + '$' + (a/1e6).toFixed(2) + 'M';
+  if (a >= 1e3) return s + '$' + (a/1e3).toFixed(0) + 'K';
+  return s + '$' + a.toFixed(0);
+}
+function fmtPct(n, d=1) { return n === null ? '—' : (n*100).toFixed(d) + '%'; }
+function fmtX(n) { return n === null ? '—' : n.toFixed(1) + 'x'; }
+function fmtMo(n) { return n === null ? '—' : n.toFixed(1) + ' mo'; }
+
+function getInputs(period) {
+  const suffix = '_' + period;
+  const scMult = scenario === 'bull' ? 1.2 : scenario === 'bear' ? 0.8 : 1;
+  const inp = {};
+  SCHEMA.forEach(g => g.rows.filter(r => r.id).forEach(r => {
+    const raw = parseFloat(document.getElementById('inp_' + r.id + suffix)?.value ?? vals[r.id + suffix]) || 0;
+    // apply scenario multiplier only to revenue drivers
+    const rev_ids = ['cust_new','arpa_new','arpa_exist','exp_rate','mktg_spend'];
+    inp[r.id] = rev_ids.includes(r.id) ? raw * scMult : raw;
+    // convert pct inputs to decimals for calc engine
+    if (r.type === 'pct') inp[r.id] = inp[r.id] / 100;
+  }));
+  return inp;
+}
+
+// ══════════════════════════════════════════════════════════
+// BUILD INPUT UI
+// ══════════════════════════════════════════════════════════
+function buildInputs() {
+  const container = document.getElementById('groups-container');
+  container.innerHTML = '';
+  SCHEMA.forEach(group => {
+    const el = document.createElement('div');
+    el.className = 'group' + (group.open ? '' : ' collapsed');
+    el.id = 'grp_' + group.group.replace(/\W/g,'_');
+
+    // header
+    const hdr = document.createElement('div');
+    hdr.className = 'group-header';
+    hdr.innerHTML = `
+      <div class="group-dot" style="background:${group.color}"></div>
+      <div class="group-name">${group.group}</div>
+      <div class="group-count">${group.rows.filter(r=>r.id).length} inputs</div>
+      <div class="group-chevron">▼</div>
+    `;
+    hdr.onclick = () => el.classList.toggle('collapsed');
+
+    // body
+    const body = document.createElement('div');
+    body.className = 'group-body';
+
+    // col header row
+    const chdr = document.createElement('div');
+    chdr.className = 'input-row input-row-header';
+    chdr.innerHTML = `
+      <div class="input-cell"><span style="font-size:10px;color:var(--text3);font-family:var(--font-m)">Driver / assumption</span></div>
+      <div class="input-col-header" id="col-y1-label">Year 1</div>
+      <div class="input-col-header" id="col-y2-label">Year 2</div>
+    `;
+    body.appendChild(chdr);
+
+    group.rows.forEach(row => {
+      const r = document.createElement('div');
+      r.className = 'input-row' + (row.derived ? ' derived-row' : '');
+      if (row.derived) {
+        r.innerHTML = `
+          <div class="input-cell"><div class="input-label" style="color:var(--text3)">${row.label}</div><div class="input-hint">${row.hint}</div></div>
+          <div class="derived-val" id="drv_${row.group||group.group.replace(/\W/g,'_')}_y1">—</div>
+          <div class="derived-val" id="drv_${row.group||group.group.replace(/\W/g,'_')}_y2">—</div>
+        `;
+        // tag derived rows for later update
+        r.dataset.derivedGroup = group.group;
+        r.dataset.derivedRow = row.label;
+      } else {
+        const suffix = row.type === 'pct' ? '%' : row.type === 'usd' ? '$' : '';
+        const step = row.type === 'pct' ? '0.1' : row.type === 'usd' ? '1000' : '1';
+        const cls = row.type === 'pct' ? 'pct' : '';
+        r.innerHTML = `
+          <div class="input-cell">
+            <div class="input-label">${row.label}</div>
+            <div class="input-hint">${row.hint}</div>
+          </div>
+          <div class="inp-wrap">
+            <input class="inp ${cls}" type="number" id="inp_${row.id}_y1"
+              value="${row.y1}" step="${step}" min="0"
+              onchange="handleChange('${row.id}','y1',this)">
+            <span class="inp-suffix">${suffix}</span>
+          </div>
+          <div class="inp-wrap">
+            <input class="inp ${cls}" type="number" id="inp_${row.id}_y2"
+              value="${row.y2}" step="${step}" min="0"
+              onchange="handleChange('${row.id}','y2',this)">
+            <span class="inp-suffix">${suffix}</span>
+          </div>
+        `;
+      }
+      body.appendChild(r);
+    });
+
+    el.appendChild(hdr);
+    el.appendChild(body);
+    container.appendChild(el);
+  });
+  updatePeriodView();
+}
+
+function handleChange(id, period, el) {
+  vals[id + '_' + period] = parseFloat(el.value) || 0;
+  el.classList.add('inp-changed');
+  recalcAll(false);
+}
+
+// ══════════════════════════════════════════════════════════
+// PERIOD VIEW
+// ══════════════════════════════════════════════════════════
+function setPeriod(mode, btn) {
+  periodView = mode;
+  document.querySelectorAll('.per-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  updatePeriodView();
+}
+function updatePeriodView() {
+  document.querySelectorAll('.inp-wrap').forEach((wrap, i) => {
+    const isY2 = i % 2 === 1;
+    if (periodView === 'y1') wrap.style.display = isY2 ? 'none' : 'flex';
+    else if (periodView === 'y2') wrap.style.display = isY2 ? 'flex' : 'none';
+    else wrap.style.display = 'flex';
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// SCENARIO
+// ══════════════════════════════════════════════════════════
+function setScenario(sc, btn) {
+  scenario = sc;
+  document.querySelectorAll('.sc-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  recalcAll(false);
+}
+
+// ══════════════════════════════════════════════════════════
+// RECALCULATE
+// ══════════════════════════════════════════════════════════
+function recalcAll(showToast = true) {
+  if (typeof SaaSCalc === 'undefined') {
+    console.warn('calculations.js not loaded — make sure it is in the same directory.');
+    return;
+  }
+
+  const y1inp = getInputs('y1');
+  const y2inp = getInputs('y2');
+  const result = SaaSCalc.run(y1inp, y2inp);
+  const { year1: y1, year2: y2, bridge_y2, benchmarks_y2, yoy } = result;
+
+  // ── P&L Y1
+  renderPL('pl-y1', y1);
+  // ── P&L Y2
+  renderPL('pl-y2', y2);
+  // ── ARR Bridge
+  renderBridge('arr-bridge', result.bridge_y1, result.bridge_y2);
+  // ── Unit economics
+  renderUnitEcon('unit-econ', y1, y2, yoy);
+  // ── Benchmarks
+  renderBenchmarks('benchmarks', benchmarks_y2);
+  // ── Derived rows
+  updateDerived(y1, y2);
+
+  if (showToast) showToastMsg('✓ Model recalculated');
+}
+
+function renderPL(elId, r) {
+  const el = document.getElementById(elId);
+  const gm = r.gross_margin;
+  const em = r.ebitda_margin;
+  el.innerHTML = [
+    { label: 'Total revenue',   val: fmtUSD(r.rev_total),    color: 'c-blue' },
+    { label: 'Gross profit',    val: fmtUSD(r.gross_profit), color: gm >= 0.70 ? 'c-good' : 'c-warn' },
+    { label: 'Gross margin',    val: fmtPct(gm),             color: gm >= 0.70 ? 'c-good' : 'c-warn' },
+    { label: 'S&M spend',       val: fmtUSD(r.sm_total),     color: 'c-purple' },
+    { label: 'R&D spend',       val: fmtUSD(r.rd_total),     color: 'c-purple' },
+    { label: 'G&A spend',       val: fmtUSD(r.ga_total),     color: 'c-purple' },
+    { label: 'EBITDA',          val: fmtUSD(r.ebitda),       color: em >= 0.10 ? 'c-good' : em >= 0 ? 'c-warn' : 'c-bad' },
+    { label: 'EBITDA margin',   val: fmtPct(em),             color: em >= 0.10 ? 'c-good' : em >= 0 ? 'c-warn' : 'c-bad' },
+    { label: 'Net income',      val: fmtUSD(r.net_income),   color: r.net_income >= 0 ? 'c-good' : 'c-bad' },
+  ].map(row => `
+    <div class="out-row">
+      <span class="out-label">${row.label}</span>
+      <span class="out-val ${row.color}">${row.val}</span>
+    </div>
+  `).join('');
+}
+
+function renderBridge(elId, b1, b2) {
+  const el = document.getElementById(elId);
+  const maxVal = Math.max(b1.ending_arr, b2.ending_arr);
+  const rows = [
+    { label: 'Start ARR (Y1)', val: b1.beginning_arr, color: '#2563EB' },
+    { label: '+ New logos',    val: b1.new_arr,        color: '#059669' },
+    { label: '+ Expansion',    val: b1.expansion_arr,  color: '#0D9488' },
+    { label: '− Churn',        val: b1.churn_arr,      color: '#E11D48' },
+    { label: 'End ARR (Y1)',   val: b1.ending_arr,     color: '#7C3AED' },
+    { label: 'End ARR (Y2)',   val: b2.ending_arr,     color: '#D97706' },
+  ];
+  el.innerHTML = '<div class="bridge">' + rows.map(r => {
+    const pct = Math.abs(r.val) / maxVal * 100;
+    const bg = r.val < 0 ? '#E11D48' : r.color;
+    return `<div class="bridge-row">
+      <div class="bridge-label" style="font-size:10px;color:var(--text2)">${r.label}</div>
+      <div class="bridge-bar-track"><div class="bridge-bar" style="width:${pct}%;background:${bg}44;border-right:2px solid ${bg}"></div></div>
+      <div class="bridge-amount" style="color:${r.val<0?'var(--rose-l)':'var(--text2)'}">${fmtUSD(r.val)}</div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+function renderUnitEcon(elId, y1, y2, yoy) {
+  const el = document.getElementById(elId);
+  el.innerHTML = [
+    { label: 'CAC (Y1 → Y2)',     val: fmtUSD(y1.cac) + ' → ' + fmtUSD(y2.cac) },
+    { label: 'LTV (Y1 → Y2)',     val: fmtUSD(y1.ltv) + ' → ' + fmtUSD(y2.ltv) },
+    { label: 'LTV/CAC (Y1→Y2)',   val: fmtX(y1.ltv_cac) + ' → ' + fmtX(y2.ltv_cac), color: y2.ltv_cac >= 3 ? 'c-good' : 'c-warn' },
+    { label: 'CAC payback (Y2)',   val: fmtMo(y2.payback_mo), color: y2.payback_mo <= 18 ? 'c-good' : 'c-warn' },
+    { label: 'NRR (Y1 → Y2)',     val: fmtPct(y1.nrr) + ' → ' + fmtPct(y2.nrr), color: y2.nrr >= 1.10 ? 'c-good' : 'c-warn' },
+    { label: 'ARR growth (Y2)',    val: yoy.arr_growth !== null ? fmtPct(yoy.arr_growth) : '—', color: 'c-blue' },
+    { label: 'Rule of 40 (Y2)',    val: yoy.rule_of_40 !== null ? yoy.rule_of_40.toFixed(1) : '—', color: yoy.rule_of_40 >= 40 ? 'c-good' : 'c-warn' },
+    { label: 'ARPA (Y2)',          val: fmtUSD(y2.arpa), color: 'c-blue' },
+  ].map(r => `<div class="out-row"><span class="out-label">${r.label}</span><span class="out-val ${r.color||''}">${r.val}</span></div>`).join('');
+}
+
+function renderBenchmarks(elId, bm) {
+  const el = document.getElementById(elId);
+  el.innerHTML = Object.values(bm).map(b => {
+    const fmtted = b.fmt === 'pct' ? fmtPct(b.value)
+                 : b.fmt === 'x'   ? fmtX(b.value)
+                 : b.value?.toFixed(1) ?? '—';
+    return `<div class="out-row">
+      <span class="out-label">${b.label}</span>
+      <span class="out-val">
+        ${fmtted}
+        <span class="out-badge b-${b.status}">${b.status}</span>
+      </span>
+    </div>`;
+  }).join('');
+}
+
+function updateDerived(y1, y2) {
+  // NRR derived row
+  const nrrY1 = document.querySelector('[data-derived-row="NRR (calculated)"] .derived-val:first-of-type');
+  const nrrY2 = document.querySelector('[data-derived-row="NRR (calculated)"] .derived-val:last-of-type');
+  if (nrrY1) nrrY1.textContent = fmtPct(y1.nrr);
+  if (nrrY2) nrrY2.textContent = fmtPct(y2.nrr);
+
+  // find derived rows by their label text and update
+  document.querySelectorAll('.derived-row').forEach(row => {
+    const label = row.dataset.derivedRow;
+    const dvs = row.querySelectorAll('.derived-val');
+    if (!dvs.length) return;
+    const map = {
+      'NRR (calculated)':       [fmtPct(y1.nrr),        fmtPct(y2.nrr)],
+      'Total COGS (calculated)': [fmtUSD(y1.cogs_total),  fmtUSD(y2.cogs_total)],
+      'Total S&M (calculated)':  [fmtUSD(y1.sm_total),    fmtUSD(y2.sm_total)],
+      'Total R&D (calculated)':  [fmtUSD(y1.rd_total),    fmtUSD(y2.rd_total)],
+      'Total G&A (calculated)':  [fmtUSD(y1.ga_total),    fmtUSD(y2.ga_total)],
+    };
+    if (map[label]) { dvs[0].textContent = map[label][0]; if (dvs[1]) dvs[1].textContent = map[label][1]; }
+  });
+}
+
+// ══════════════════════════════════════════════════════════
+// RESET / EXPORT
+// ══════════════════════════════════════════════════════════
+function resetAll() {
+  SCHEMA.forEach(g => g.rows.filter(r => r.id).forEach(r => {
+    const y1 = document.getElementById('inp_' + r.id + '_y1');
+    const y2 = document.getElementById('inp_' + r.id + '_y2');
+    if (y1) { y1.value = r.y1; y1.classList.remove('inp-changed'); }
+    if (y2) { y2.value = r.y2; y2.classList.remove('inp-changed'); }
+    vals[r.id + '_y1'] = r.y1;
+    vals[r.id + '_y2'] = r.y2;
+  }));
+  recalcAll();
+  showToastMsg('↺ Inputs reset to defaults');
+}
+
+function exportJSON() {
+  const y1 = getInputs('y1');
+  const y2 = getInputs('y2');
+  const payload = { year1: y1, year2: y2, exported: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'saas_inputs_' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  showToastMsg('⬇ Inputs exported as JSON');
+}
+
+function showToastMsg(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ══════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════
+buildInputs();
+// delay recalc to let DOM settle
+setTimeout(recalcAll, 100);
+</script>
+</body>
+</html>

@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SaaS Financial Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:    #0F1C2E;
+    --navy2:   #162438;
+    --navy3:   #1E3050;
+    --blue:    #2563EB;
+    --blue-l:  #3B82F6;
+    --teal:    #0D9488;
+    --teal-l:  #14B8A6;
+    --amber:   #D97706;
+    --amber-l: #F59E0B;
+    --rose:    #E11D48;
+    --rose-l:  #FB7185;
+    --green:   #059669;
+    --green-l: #34D399;
+    --purple:  #7C3AED;
+    --slate:   #64748B;
+    --slate-l: #94A3B8;
+    --bg:      #0A1525;
+    --bg2:     #0F1C2E;
+    --bg3:     #162438;
+    --bg4:     #1E3050;
+    --line:    rgba(255,255,255,0.07);
+    --line2:   rgba(255,255,255,0.12);
+    --text:    #E2E8F0;
+    --text2:   #94A3B8;
+    --text3:   #64748B;
+    --font-d:  'DM Serif Display', serif;
+    --font-b:  'Outfit', sans-serif;
+    --font-m:  'DM Mono', monospace;
+    --r:       8px;
+    --r2:      12px;
+    --r3:      16px;
+  }
+
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font-b);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── LAYOUT ── */
+  .app { display: flex; height: 100vh; overflow: hidden; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 220px; flex-shrink: 0;
+    background: var(--bg2);
+    border-right: 1px solid var(--line);
+    display: flex; flex-direction: column;
+    padding: 0;
+    position: relative; z-index: 10;
+  }
+  .sidebar-logo {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid var(--line);
+  }
+  .logo-mark {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--blue), var(--teal));
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 10px;
+  }
+  .logo-mark svg { width: 16px; height: 16px; fill: #fff; }
+  .logo-title { font-family: var(--font-d); font-size: 15px; color: var(--text); line-height: 1.2; }
+  .logo-sub { font-size: 10px; color: var(--text3); margin-top: 2px; letter-spacing: .08em; text-transform: uppercase; font-family: var(--font-m); }
+
+  .nav { padding: 12px 10px; flex: 1; }
+  .nav-section-label { font-size: 10px; color: var(--text3); letter-spacing: .08em; text-transform: uppercase; font-family: var(--font-m); padding: 8px 10px 4px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: var(--r); cursor: pointer;
+    font-size: 13px; color: var(--text2); transition: all .15s;
+    border: none; background: none; width: 100%; text-align: left;
+    margin-bottom: 2px;
+  }
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+  .nav-item.active { background: rgba(37,99,235,.15); color: var(--blue-l); }
+  .nav-item.active .nav-icon { opacity: 1; }
+  .nav-icon { width: 16px; height: 16px; opacity: .5; flex-shrink: 0; }
+
+  .sidebar-footer {
+    padding: 16px 20px;
+    border-top: 1px solid var(--line);
+    font-size: 11px; color: var(--text3);
+    font-family: var(--font-m);
+  }
+  .sidebar-footer a { color: var(--blue-l); text-decoration: none; }
+
+  /* ── MAIN ── */
+  .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+
+  .topbar {
+    padding: 16px 32px;
+    border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--bg2); position: sticky; top: 0; z-index: 5;
+  }
+  .topbar-title { font-family: var(--font-d); font-size: 20px; font-style: italic; color: var(--text); }
+  .topbar-meta { font-size: 12px; color: var(--text3); font-family: var(--font-m); }
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10px; font-family: var(--font-m);
+    padding: 3px 8px; border-radius: 20px; border: 1px solid;
+  }
+  .badge-blue  { color: var(--blue-l);  border-color: rgba(59,130,246,.3); background: rgba(59,130,246,.08); }
+  .badge-teal  { color: var(--teal-l);  border-color: rgba(20,184,166,.3); background: rgba(20,184,166,.08); }
+  .badge-amber { color: var(--amber-l); border-color: rgba(245,158,11,.3); background: rgba(245,158,11,.08); }
+  .badge-green { color: var(--green-l); border-color: rgba(52,211,153,.3); background: rgba(52,211,153,.08); }
+  .badge-rose  { color: var(--rose-l);  border-color: rgba(251,113,133,.3); background: rgba(251,113,133,.08); }
+
+  .content { padding: 28px 32px; flex: 1; }
+
+  /* ── VIEWS ── */
+  .view { display: none; }
+  .view.active { display: block; animation: fadeIn .2s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  /* ── SECTION HEADER ── */
+  .section-header { margin-bottom: 24px; }
+  .section-title { font-family: var(--font-d); font-size: 26px; font-style: italic; margin-bottom: 6px; }
+  .section-desc { font-size: 13px; color: var(--text2); line-height: 1.6; max-width: 600px; }
+
+  /* ── METRIC CARDS ROW ── */
+  .metric-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 28px; }
+  .metric-card {
+    background: var(--bg3); border: 1px solid var(--line2);
+    border-radius: var(--r2); padding: 16px;
+    position: relative; overflow: hidden;
+  }
+  .metric-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--c1, var(--blue)), var(--c2, var(--teal)));
+  }
+  .metric-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .07em; font-family: var(--font-m); margin-bottom: 8px; }
+  .metric-value { font-size: 22px; font-weight: 600; }
+  .metric-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+  /* ── OVERVIEW TREE ── */
+  .tree-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  .tree-pillar {
+    background: var(--bg3); border: 1px solid var(--line2);
+    border-radius: var(--r3); overflow: hidden;
+  }
+  .pillar-header {
+    padding: 16px 20px; display: flex; align-items: center; gap: 10px;
+    border-bottom: 1px solid var(--line);
+  }
+  .pillar-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .pillar-name { font-weight: 600; font-size: 14px; }
+  .pillar-body { padding: 12px 16px; }
+  .sub-cat { margin-bottom: 12px; }
+  .sub-cat-name {
+    font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .06em;
+    font-family: var(--font-m); margin-bottom: 6px; padding-bottom: 4px;
+    border-bottom: 1px solid var(--line);
+  }
+  .leaf-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+  .leaf-tag {
+    font-size: 11px; padding: 3px 8px; border-radius: 4px;
+    border: 1px solid; cursor: pointer; transition: all .15s;
+    font-family: var(--font-m);
+  }
+
+  /* ── MIND MAP SVG ── */
+  .mindmap-wrap {
+    background: var(--bg3); border: 1px solid var(--line2);
+    border-radius: var(--r3); overflow: auto; padding: 16px;
+  }
+  .mindmap-wrap svg { width: 100%; min-width: 700px; }
+
+  /* ── P&L WATERFALL ── */
+  .pl-grid { display: grid; grid-template-columns: 1fr 320px; gap: 16px; }
+  .pl-waterfall {
+    background: var(--bg3); border: 1px solid var(--line2);
+    border-radius: var(--r3); padding: 24px;
+  }
+  .wf-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .wf-subtitle { font-size: 11px; color: var(--text3); font-family: var(--font-m); margin-bottom: 20px; }
+  .wf-row { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; min-height: 28px; }
+  .wf-label { width: 220px; flex-shrink: 0; font-size: 12px; }
+  .wf-label.bold { font-weight: 600; font-size: 13px; }
+  .wf-label.indent { padding-left: 14px; color: var(--text2); }
+  .wf-bar-track { flex: 1; height: 20px; background: var(--bg4); border-radius: 3px; position: relative; overflow: hidden; }
+  .wf-bar { height: 100%; border-radius: 3px; position: absolute; display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; transition: width .6s cubic-bezier(.4,0,.2,1); }
+  .wf-bar span { font-size: 10px; font-family: var(--font-m); font-weight: 500; white-space: nowrap; }
+  .wf-amount { width: 80px; text-align: right; flex-shrink: 0; font-size: 12px; font-family: var(--font-m); }
+  .wf-divider { height: 1px; background: var(--line); margin: 8px 0; }
+
+  .pl-summary {
+    background: var(--bg3); border: 1px solid var(--line2);
+    border-radius: var(--r3); padding: 20px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .pl-summary-title { font-size: 12px; color: var(--text3); font-family: var(--font-m); text-transform: uppercase; letter-spacing: .07em; margin-bottom: 4px; }
+  .pl-stat { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .pl-stat:last-child { border-bottom: none; }
+  .pl-stat-label { font-size: 12px; color: var(--text2); }
+  .pl-stat-value { font-size: 14px; font-weight: 600; font-family: var(--font-m); }
+
+  /* ── KPI SCORECARD ── */
+  .kpi-section-title { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .07em; font-family: var(--font-m); margin: 20px 0 10px; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+  .kpi-card {
+    background: var(--bg3); border: 1px solid var(--line2);
+    border-radius: var(--r2); padding: 16px;
+    cursor: pointer; transition: border-color .15s;
+  }
+  .kpi-card:hover { border-color: var(--line2); background: var(--bg4); }
+  .kpi-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .07em; font-family: var(--font-m); margin-bottom: 8px; }
+  .kpi-val { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+  .kpi-bench { font-size: 10px; color: var(--text3); }
+  .kpi-status { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+  .good  { color: var(--green-l); }
+  .warn  { color: var(--amber-l); }
+  .bad   { color: var(--rose-l);  }
+  .dot-good  { background: var(--green-l); }
+  .dot-warn  { background: var(--amber-l); }
+  .dot-bad   { background: var(--rose-l);  }
+
+  /* ── INPUT MASK ── */
+  .input-layout { display: grid; grid-template-columns: 1fr 360px; gap: 16px; align-items: start; }
+  .input-panel {
+    background: var(--bg3); border: 1px solid var(--line2);
+    border-radius: var(--r3); overflow: hidden;
+  }
+  .input-group-header {
+    padding: 12px 20px; background: var(--bg4);
+    border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .input-group-name { font-size: 12px; font-weight: 600; }
+  .input-body { padding: 0; }
+  .input-row {
+    display: grid; grid-template-columns: 1fr 100px 100px;
+    padding: 10px 20px; border-bottom: 1px solid var(--line);
+    align-items: center; gap: 12px;
+  }
+  .input-row:last-child { border-bottom: none; }
+  .input-name { font-size: 12px; color: var(--text2); }
+  .input-name small { display: block; font-size: 10px; color: var(--text3); font-family: var(--font-m); margin-top: 2px; }
+  .inp {
+    background: var(--bg2); border: 1px solid var(--line2);
+    border-radius: 6px; color: var(--blue-l);
+    font-family: var(--font-m); font-size: 12px;
+    padding: 6px 10px; width: 100%; text-align: right;
+    transition: border-color .15s;
+  }
+  .inp:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 2px rgba(37,99,235,.2); }
+  .inp.pct { color: var(--teal-l); }
+
+  .output-panel {
+    background: var(--bg3); border: 1px solid var(--line2);
+    border-radius: var(--r3); padding: 20px; position: sticky; top: 80px;
+  }
+  .output-title { font-size: 12px; color: var(--text3); text-transform: uppercase; letter-spacing: .07em; font-family: var(--font-m); margin-bottom: 16px; }
+  .output-stat { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .output-stat:last-child { border-bottom: none; }
+  .output-label { font-size: 11px; color: var(--text2); }
+  .output-val { font-size: 14px; font-weight: 600; font-family: var(--font-m); }
+  .recalc-btn {
+    width: 100%; margin-top: 16px; padding: 10px;
+    background: linear-gradient(135deg, var(--blue), var(--teal));
+    border: none; border-radius: var(--r); color: #fff;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    font-family: var(--font-b); transition: opacity .15s;
+  }
+  .recalc-btn:hover { opacity: .9; }
+  .recalc-btn:active { opacity: .8; transform: scale(0.99); }
+
+  .legend-row { display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--text3); font-family: var(--font-m); }
+  .legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 3px; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .sidebar { width: 60px; }
+    .logo-title, .logo-sub, .nav-item span, .sidebar-footer { display: none; }
+    .nav-item { justify-content: center; }
+    .content { padding: 20px 16px; }
+    .topbar { padding: 12px 16px; }
+    .pl-grid, .input-layout { grid-template-columns: 1fr; }
+    .output-panel { position: static; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24"><path d="M3 3h8v8H3zm10 0h8v8h-8zM3 13h8v8H3zm13 3a5 5 0 1 1 0-1z"/></svg>
+      </div>
+      <div class="logo-title">SaaS Finance<br>Architecture</div>
+      <div class="logo-sub">v1.0.0</div>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-section-label">Views</div>
+      <button class="nav-item active" onclick="switchView('overview', this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <span>Overview</span>
+      </button>
+      <button class="nav-item" onclick="switchView('mindmap', this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="3"/><circle cx="4" cy="6" r="2"/><circle cx="20" cy="6" r="2"/><circle cx="4" cy="18" r="2"/><circle cx="20" cy="18" r="2"/><line x1="7" y1="7.5" x2="10" y2="10.5"/><line x1="17" y1="7.5" x2="14" y2="10.5"/><line x1="7" y1="16.5" x2="10" y2="13.5"/><line x1="17" y1="16.5" x2="14" y2="13.5"/></svg>
+        <span>Mind map</span>
+      </button>
+      <button class="nav-item" onclick="switchView('pl', this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        <span>P&L waterfall</span>
+      </button>
+      <button class="nav-item" onclick="switchView('kpis', this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+        <span>KPI scorecard</span>
+      </button>
+      <button class="nav-item" onclick="switchView('inputs', this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
+        <span>Input mask</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      MIT License · <a href="https://github.com" target="_blank">GitHub</a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <header class="topbar">
+      <div class="topbar-title" id="view-title">Architecture overview</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="badge badge-blue">SaaS</span>
+        <span class="badge badge-teal">Year 1 · Year 2</span>
+        <span class="topbar-meta" style="margin-left:8px">Last updated: 2025</span>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- ═══ OVERVIEW ═══ -->
+      <div class="view active" id="view-overview">
+        <div class="section-header">
+          <div class="section-title">Financial architecture overview</div>
+          <div class="section-desc">Three-pillar taxonomy covering every revenue driver, cost category, and personnel component in a SaaS business. Click any tag to explore the definition.</div>
+        </div>
+
+        <div class="metric-row" id="summary-metrics">
+          <!-- filled by JS -->
+        </div>
+
+        <div class="tree-grid" id="tree-root"></div>
+      </div>
+
+      <!-- ═══ MIND MAP ═══ -->
+      <div class="view" id="view-mindmap">
+        <div class="section-header">
+          <div class="section-title">Financial architecture mind map</div>
+          <div class="section-desc">Visual hierarchy of all financial architecture nodes. Color denotes category pillar.</div>
+        </div>
+        <div class="mindmap-wrap">
+          <svg id="mindmap-svg" viewBox="0 0 900 980" xmlns="http://www.w3.org/2000/svg" font-family="'Outfit', sans-serif"></svg>
+        </div>
+      </div>
+
+      <!-- ═══ P&L ═══ -->
+      <div class="view" id="view-pl">
+        <div class="section-header">
+          <div class="section-title">P&L waterfall</div>
+          <div class="section-desc">Benchmark income statement for a $10M ARR SaaS company. All values as % of total revenue. Edit assumptions in the input mask to refresh.</div>
+        </div>
+        <div class="pl-grid">
+          <div class="pl-waterfall">
+            <div class="wf-title">Income statement</div>
+            <div class="wf-subtitle" id="pl-arr-label">Benchmark: $10.0M ARR · Gross margin 78% · EBITDA 20%</div>
+            <div id="wf-rows"></div>
+          </div>
+          <div class="pl-summary">
+            <div class="pl-summary-title">Key ratios</div>
+            <div id="pl-ratios"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ KPIs ═══ -->
+      <div class="view" id="view-kpis">
+        <div class="section-header">
+          <div class="section-title">SaaS KPI scorecard</div>
+          <div class="section-desc">Industry benchmark ranges for early-stage, growth, and scale companies. Click any card to see the definition and formula.</div>
+        </div>
+        <div class="kpi-section-title">Retention &amp; growth</div>
+        <div class="kpi-grid" id="kpi-retention"></div>
+        <div class="kpi-section-title">Unit economics</div>
+        <div class="kpi-grid" id="kpi-unit"></div>
+        <div class="kpi-section-title">Efficiency &amp; margins</div>
+        <div class="kpi-grid" id="kpi-efficiency"></div>
+      </div>
+
+      <!-- ═══ INPUT MASK ═══ -->
+      <div class="view" id="view-inputs">
+        <div class="section-header">
+          <div class="section-title">Input mask</div>
+          <div class="section-desc">Edit assumptions below. The P&L waterfall and KPI scorecard update when you click <strong>Recalculate</strong>. Blue = editable input · Teal = percentage input.</div>
+        </div>
+        <div class="input-layout">
+          <div id="input-groups"></div>
+          <div class="output-panel">
+            <div class="output-title">Live P&L output</div>
+            <div id="live-output"></div>
+            <button class="recalc-btn" onclick="recalculate()">↻ Recalculate</button>
+            <div class="legend-row">
+              <div class="legend-item"><div class="legend-dot" style="background:var(--blue-l)"></div>$ input</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--teal-l)"></div>% input</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--green-l)"></div>Calculated</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </main>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════
+const PILLARS = [
+  {
+    name: "Revenue & operational drivers",
+    color: "#2563EB",
+    dot: "#3B82F6",
+    badge: "badge-blue",
+    cats: [
+      { name: "Customer & revenue base", leaves: ["MRR and ARR","Pricing tiers","New and expansion MRR","Churn rate","Contraction and downgrade","ARPA and ACV"] },
+      { name: "Sales & marketing pipeline", leaves: ["Pipeline velocity","Win rates","Conversion rates","Lead generation"] },
+      { name: "Sales capacity", leaves: ["Sales headcount","Quotas","Ramp-up schedules","Attainment"] },
+      { name: "External & seasonal", leaves: ["Seasonality multipliers","Macroeconomic factors"] }
+    ]
+  },
+  {
+    name: "Cost types & categories",
+    color: "#0D9488",
+    dot: "#14B8A6",
+    badge: "badge-teal",
+    cats: [
+      { name: "Cost of goods sold (COGS)", leaves: ["Technical support","Professional services","Customer success","DevOps and hosting","Transaction and usage expenses","Hardware costs","Software licenses","R&D amortization"] },
+      { name: "Operating expenses (OpEx)", leaves: ["Research and development","Sales and commissions","Marketing","General and administrative","Office and tools"] },
+      { name: "Non-operating expenses", leaves: ["Interest expense","Corporate taxes"] }
+    ]
+  },
+  {
+    name: "Fully burdened personnel",
+    color: "#D97706",
+    dot: "#F59E0B",
+    badge: "badge-amber",
+    cats: [
+      { name: "Personnel components", leaves: ["Base salaries","Payroll taxes","Employee benefits","Travel and training","Internal software subscriptions"] }
+    ]
+  }
+];
+
+const KPI_DEFS = [
+  { label: "Net Revenue Retention", val: "115%", bench: "Best-in-class >120%", status: "good", def: "NRR = (Begin ARR + Expansion − Contraction − Churn) / Begin ARR. Measures cohort revenue growth.", group: "retention" },
+  { label: "ARR growth YoY",        val: ">40%", bench: "Growth target: >30%", status: "good", def: "Year-over-year growth in Annual Recurring Revenue. Key SaaS velocity metric.", group: "retention" },
+  { label: "Gross churn (annual)",  val: "<5%",  bench: "World-class: <2%",   status: "warn", def: "Revenue lost from churned & contracted accounts / Beginning ARR. Excludes expansion.", group: "retention" },
+  { label: "Logo churn rate",       val: "<8%",  bench: "Healthy: <5%",       status: "warn", def: "% of customer logos lost. Proxy for product-market fit.", group: "retention" },
+  { label: "CAC payback period",    val: "14 mo",bench: "Target: <12 months", status: "warn", def: "Months to recover CAC = CAC / (ARPA × Gross Margin %)", group: "unit" },
+  { label: "LTV / CAC ratio",       val: "4.2x", bench: "Target: >3x",        status: "good", def: "Customer lifetime value ÷ acquisition cost. >3x is the standard threshold.", group: "unit" },
+  { label: "CAC (blended)",         val: "$4,800",bench: "Depends on ACV",    status: "good", def: "Total S&M spend / New customers acquired in period.", group: "unit" },
+  { label: "ARPA",                  val: "$22K", bench: "Varies by segment",  status: "good", def: "Average Revenue Per Account = Total ARR / Total customers.", group: "unit" },
+  { label: "Gross margin",          val: "78%",  bench: "SaaS target: >70%",  status: "good", def: "(Revenue − COGS) / Revenue. COGS = hosting + support + PS.", group: "efficiency" },
+  { label: "EBITDA margin",         val: "20%",  bench: "Scale target: >15%", status: "good", def: "EBITDA / Revenue. Measures operating leverage after all OpEx.", group: "efficiency" },
+  { label: "Rule of 40",            val: "60",   bench: "Healthy: >40",       status: "good", def: "ARR Growth % + EBITDA Margin %. Balances growth and profitability.", group: "efficiency" },
+  { label: "Magic number",          val: "0.82", bench: "Efficient: >0.75",   status: "good", def: "Net new ARR / Prior period S&M spend. Measures S&M efficiency.", group: "efficiency" }
+];
+
+const INPUT_SCHEMA = [
+  {
+    group: "Revenue drivers", color: "#2563EB",
+    rows: [
+      { name: "Starting customers", hint: "logos at period start", id: "cust_start", yr1: 50, yr2: 60, pct: false },
+      { name: "New customers", hint: "net new logos / yr", id: "cust_new", yr1: 120, yr2: 180, pct: false },
+      { name: "Avg ARR / customer (new)", hint: "annual contract value", id: "arpa_new", yr1: 24000, yr2: 28000, pct: false },
+      { name: "Avg ARR / customer (exist)", hint: "blended existing book", id: "arpa_ex", yr1: 22000, yr2: 25000, pct: false },
+      { name: "Expansion MRR %", hint: "upsell & cross-sell rate", id: "exp_rate", yr1: 5, yr2: 7, pct: true },
+      { name: "Gross churn rate", hint: "% ARR lost from churn", id: "churn", yr1: 8, yr2: 7, pct: true },
+    ]
+  },
+  {
+    group: "COGS assumptions", color: "#0D9488",
+    rows: [
+      { name: "Hosting / DevOps", hint: "% of revenue", id: "hosting", yr1: 8, yr2: 7, pct: true },
+      { name: "Support headcount", hint: "FTEs", id: "sup_hc", yr1: 5, yr2: 8, pct: false },
+      { name: "Avg support cost", hint: "fully loaded annual $", id: "sup_cost", yr1: 75000, yr2: 78000, pct: false },
+      { name: "PS margin", hint: "% gross margin on PS", id: "ps_margin", yr1: 20, yr2: 25, pct: true },
+    ]
+  },
+  {
+    group: "Sales & marketing", color: "#7C3AED",
+    rows: [
+      { name: "AE headcount", hint: "quota-carrying reps", id: "ae_hc", yr1: 8, yr2: 14, pct: false },
+      { name: "Avg AE OTE", hint: "on-target earnings", id: "ae_ote", yr1: 140000, yr2: 145000, pct: false },
+      { name: "Commission rate", hint: "% of new bookings", id: "comm", yr1: 10, yr2: 10, pct: true },
+      { name: "Marketing spend", hint: "demand gen + brand", id: "mktg", yr1: 600000, yr2: 900000, pct: false },
+    ]
+  },
+  {
+    group: "R&D", color: "#0D9488",
+    rows: [
+      { name: "Engineering headcount", hint: "FTEs", id: "eng_hc", yr1: 12, yr2: 18, pct: false },
+      { name: "Avg engineer cost", hint: "fully loaded annual $", id: "eng_cost", yr1: 130000, yr2: 135000, pct: false },
+      { name: "R&D other costs", hint: "tools, testing, IP", id: "rd_other", yr1: 80000, yr2: 120000, pct: false },
+    ]
+  },
+  {
+    group: "G&A", color: "#D97706",
+    rows: [
+      { name: "G&A headcount", hint: "finance, HR, legal", id: "ga_hc", yr1: 4, yr2: 6, pct: false },
+      { name: "Avg G&A cost", hint: "fully loaded annual $", id: "ga_cost", yr1: 110000, yr2: 115000, pct: false },
+      { name: "Legal & accounting", hint: "external advisors", id: "legal", yr1: 60000, yr2: 75000, pct: false },
+      { name: "Office & facilities", hint: "rent + utilities + tools", id: "office", yr1: 120000, yr2: 130000, pct: false },
+    ]
+  }
+];
+
+// ═══════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════
+const VIEW_TITLES = {
+  overview: "Architecture overview",
+  mindmap:  "Financial mind map",
+  pl:       "P&L waterfall",
+  kpis:     "KPI scorecard",
+  inputs:   "Input mask"
+};
+
+function switchView(id, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('view-'+id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  document.getElementById('view-title').textContent = VIEW_TITLES[id] || '';
+}
+
+// ═══════════════════════════════════════════════════════
+// OVERVIEW
+// ═══════════════════════════════════════════════════════
+function buildOverview() {
+  // summary metrics
+  const metrics = [
+    { label: "Drivers catalogued", value: "32", sub: "Revenue + Cost + HR", c1: "#2563EB", c2: "#14B8A6" },
+    { label: "KPIs tracked", value: "12", sub: "Retention · Unit econ · Efficiency", c1: "#14B8A6", c2: "#7C3AED" },
+    { label: "Architecture pillars", value: "3", sub: "Revenue · Costs · Personnel", c1: "#7C3AED", c2: "#D97706" },
+    { label: "Benchmark P&L ARR", value: "$10M", sub: "Year 1 reference model", c1: "#D97706", c2: "#059669" }
+  ];
+  const mrow = document.getElementById('summary-metrics');
+  metrics.forEach(m => {
+    const card = document.createElement('div');
+    card.className = 'metric-card';
+    card.style.setProperty('--c1', m.c1);
+    card.style.setProperty('--c2', m.c2);
+    card.innerHTML = `<div class="metric-label">${m.label}</div><div class="metric-value">${m.value}</div><div class="metric-sub">${m.sub}</div>`;
+    mrow.appendChild(card);
+  });
+
+  // tree
+  const root = document.getElementById('tree-root');
+  PILLARS.forEach(p => {
+    const pillar = document.createElement('div');
+    pillar.className = 'tree-pillar';
+    let catsHtml = '';
+    p.cats.forEach(cat => {
+      const tags = cat.leaves.map(l =>
+        `<span class="leaf-tag" style="border-color:${p.color}33;background:${p.color}11;color:${p.color === '#2563EB' ? '#60A5FA' : p.color === '#0D9488' ? '#2DD4BF' : '#FCD34D'}" title="${l}">${l}</span>`
+      ).join('');
+      catsHtml += `<div class="sub-cat"><div class="sub-cat-name">${cat.name}</div><div class="leaf-tags">${tags}</div></div>`;
+    });
+    pillar.innerHTML = `
+      <div class="pillar-header">
+        <div class="pillar-dot" style="background:${p.dot}"></div>
+        <div class="pillar-name">${p.name}</div>
+        <span class="badge ${p.badge}" style="margin-left:auto">${p.cats.reduce((a,c)=>a+c.leaves.length,0)} drivers</span>
+      </div>
+      <div class="pillar-body">${catsHtml}</div>
+    `;
+    root.appendChild(pillar);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// MIND MAP SVG
+// ═══════════════════════════════════════════════════════
+function buildMindMap() {
+  const svg = document.getElementById('mindmap-svg');
+  const ns = 'http://www.w3.org/2000/svg';
+  const W = 900, CX = 155;
+
+  const pillarColors = ['#2563EB','#0D9488','#D97706'];
+  const pillarLightColors = ['#60A5FA','#2DD4BF','#FCD34D'];
+
+  // root node
+  function rect(x, y, w, h, rx, fill, stroke) {
+    const r = document.createElementNS(ns, 'rect');
+    r.setAttribute('x', x); r.setAttribute('y', y);
+    r.setAttribute('width', w); r.setAttribute('height', h);
+    r.setAttribute('rx', rx); r.setAttribute('fill', fill);
+    r.setAttribute('stroke', stroke); r.setAttribute('stroke-width', '1');
+    return r;
+  }
+  function text(x, y, content, size, fill, weight='400', anchor='middle') {
+    const t = document.createElementNS(ns, 'text');
+    t.setAttribute('x', x); t.setAttribute('y', y);
+    t.setAttribute('font-size', size); t.setAttribute('fill', fill);
+    t.setAttribute('font-weight', weight); t.setAttribute('text-anchor', anchor);
+    t.setAttribute('dominant-baseline', 'central');
+    t.textContent = content;
+    return t;
+  }
+  function line(x1,y1,x2,y2,stroke,sw=1,dash='') {
+    const l = document.createElementNS(ns, 'line');
+    l.setAttribute('x1',x1);l.setAttribute('y1',y1);
+    l.setAttribute('x2',x2);l.setAttribute('y2',y2);
+    l.setAttribute('stroke',stroke);l.setAttribute('stroke-width',sw);
+    if(dash) l.setAttribute('stroke-dasharray',dash);
+    return l;
+  }
+
+  // Root
+  svg.appendChild(rect(CX-60, 14, 120, 32, 8, '#1E3050', '#3B82F6'));
+  svg.appendChild(text(CX, 30, 'SaaS Financial Architecture', 11, '#93C5FD', '600'));
+
+  const pillarY = 80;
+  const pillarData = PILLARS.map((p,i) => {
+    let totalLeaves = p.cats.reduce((a,c)=>a+c.leaves.length,0);
+    return { ...p, totalLeaves, idx: i };
+  });
+
+  // Layout: 3 pillars spread across width
+  const pillarXs = [CX + 30, CX + 330, CX + 590];
+  const leafX = 620;
+
+  let leafY = pillarY;
+  pillarData.forEach((p, pi) => {
+    const px = pillarXs[pi];
+    const col = pillarColors[pi];
+    const colLight = pillarLightColors[pi];
+
+    // line from root to pillar
+    svg.appendChild(line(CX, 46, px, pillarY, col+'88', 1));
+
+    // pillar box
+    svg.appendChild(rect(px-65, pillarY, 130, 30, 7, col+'22', col));
+    svg.appendChild(text(px, pillarY+15, p.name.split(' ').slice(0,2).join(' '), 10, colLight, '600'));
+
+    let catY = pillarY + 55;
+    p.cats.forEach((cat, ci) => {
+      const cyMid = catY + 13;
+      // line pillar → cat
+      svg.appendChild(line(px, pillarY+30, px, catY, col+'55', 1, '3 2'));
+      svg.appendChild(line(px, cyMid, px+35, cyMid, col+'55', 1));
+
+      // cat box
+      svg.appendChild(rect(px+35, catY, 110, 26, 5, col+'15', col+'66'));
+      svg.appendChild(text(px+90, catY+13, cat.name, 9, colLight, '500'));
+
+      cat.leaves.forEach((leaf, li) => {
+        const ly = catY + li * 20;
+        if (pi === 2) { // HR pillar — inline leaves
+          svg.appendChild(line(px+145, cyMid, px+155, catY+li*20+10, col+'44', 0.8));
+          svg.appendChild(rect(px+155, catY+li*20, 95, 18, 4, '#1E3050', col+'44'));
+          svg.appendChild(text(px+202, catY+li*20+9, leaf, 8, '#94A3B8', '400'));
+        } else {
+          // leaves on far right
+          const leafCurY = catY + li * 20;
+          svg.appendChild(line(px+145, cyMid, leafX, leafCurY+9, col+'33', 0.7));
+          svg.appendChild(rect(leafX, leafCurY, 115, 18, 4, '#162438', col+'44'));
+          svg.appendChild(text(leafX + 57, leafCurY+9, leaf, 8, '#94A3B8', '400'));
+        }
+      });
+
+      catY += cat.leaves.length * 20 + 28;
+    });
+
+    leafY = Math.max(leafY, catY);
+  });
+
+  // adjust viewBox height
+  svg.setAttribute('viewBox', `0 0 900 ${leafY + 20}`);
+}
+
+// ═══════════════════════════════════════════════════════
+// P&L WATERFALL
+// ═══════════════════════════════════════════════════════
+let plState = {
+  revenue: 10000000,
+  cogsPct: 0.22,
+  smPct: 0.28,
+  rdPct: 0.20,
+  gaPct: 0.09,
+  daTax: 0.08
+};
+
+function computePL(s) {
+  const rev = s.revenue;
+  const cogs = rev * s.cogsPct;
+  const gp = rev - cogs;
+  const sm = rev * s.smPct;
+  const rd = rev * s.rdPct;
+  const ga = rev * s.gaPct;
+  const opex = sm + rd + ga;
+  const ebitda = gp - opex;
+  const daTax = rev * s.daTax;
+  const ni = ebitda - daTax;
+  return { rev, cogs, gp, sm, rd, ga, opex, ebitda, daTax, ni };
+}
+
+function fmt(n, isM=false) {
+  if (isM) return '$' + (n/1e6).toFixed(1) + 'M';
+  return (n >= 0 ? '+' : '') + (n*100/plState.revenue).toFixed(1) + '%';
+}
+function fmtM(n) { return (n>=0?'$':'-$') + Math.abs(n/1e6).toFixed(1) + 'M'; }
+
+function buildWaterfall() {
+  const pl = computePL(plState);
+  const wfRows = document.getElementById('wf-rows');
+  wfRows.innerHTML = '';
+
+  const rows = [
+    { label: "Total revenue", val: pl.rev, pct: 100, color: "#2563EB", type: "total" },
+    { label: "  – Technical support & DevOps", val: -pl.rev*0.10, pct: 10, color: "#E11D48", type: "cogs", indent: true },
+    { label: "  – Professional services COGS", val: -pl.rev*0.06, pct: 6, color: "#E11D48", type: "cogs", indent: true },
+    { label: "  – Other COGS", val: -pl.rev*0.06, pct: 6, color: "#E11D48", type: "cogs", indent: true },
+    { label: "= Gross profit", val: pl.gp, pct: Math.round(pl.gp/pl.rev*100), color: "#059669", type: "sub" },
+    { label: "  – Sales & marketing", val: -pl.sm, pct: Math.round(pl.smPct*100), color: "#7C3AED", type: "opex", indent: true },
+    { label: "  – Research & development", val: -pl.rd, pct: Math.round(pl.rdPct*100), color: "#7C3AED", type: "opex", indent: true },
+    { label: "  – General & administrative", val: -pl.ga, pct: Math.round(pl.gaPct*100), color: "#7C3AED", type: "opex", indent: true },
+    { label: "= EBITDA", val: pl.ebitda, pct: Math.round(pl.ebitda/pl.rev*100), color: "#D97706", type: "sub" },
+    { label: "  – D&A + Interest + Tax", val: -pl.daTax, pct: Math.round(pl.daTax/pl.rev*100), color: "#E11D48", type: "other", indent: true },
+    { label: "= Net income", val: pl.ni, pct: Math.round(pl.ni/pl.rev*100), color: "#059669", type: "total" }
+  ];
+
+  rows.forEach((row, i) => {
+    if (i === 4 || i === 8 || i === 10) {
+      const div = document.createElement('div');
+      div.className = 'wf-divider';
+      wfRows.appendChild(div);
+    }
+    const r = document.createElement('div');
+    r.className = 'wf-row';
+    const isNeg = row.val < 0;
+    const barPct = Math.min(Math.abs(row.pct), 100);
+    const barLeft = isNeg ? (100 - barPct) + '%' : '0';
+    const textColor = isNeg ? '#FB7185' : (row.pct > 0 ? '#86EFAC' : '#94A3B8');
+    r.innerHTML = `
+      <div class="wf-label ${row.type==='total'?'bold':''} ${row.indent?'indent':''}">${row.label}</div>
+      <div class="wf-bar-track">
+        <div class="wf-bar" style="background:${row.color}${isNeg?'44':'55'};width:${barPct}%;left:${barLeft}">
+          <span style="color:${textColor}">${Math.abs(row.pct)}%</span>
+        </div>
+      </div>
+      <div class="wf-amount" style="color:${isNeg?'#FB7185':row.type==='sub'||row.type==='total'?'#E2E8F0':'#94A3B8'}">${fmtM(row.val)}</div>
+    `;
+    wfRows.appendChild(r);
+  });
+
+  // ratios
+  const ratios = [
+    { label: "Gross margin", val: (pl.gp/pl.rev*100).toFixed(1) + '%', color: '#34D399' },
+    { label: "EBITDA margin", val: (pl.ebitda/pl.rev*100).toFixed(1) + '%', color: '#34D399' },
+    { label: "Net income margin", val: (pl.ni/pl.rev*100).toFixed(1) + '%', color: '#34D399' },
+    { label: "S&M as % rev", val: (pl.smPct*100).toFixed(1) + '%', color: '#A78BFA' },
+    { label: "R&D as % rev", val: (pl.rdPct*100).toFixed(1) + '%', color: '#A78BFA' },
+    { label: "G&A as % rev", val: (pl.gaPct*100).toFixed(1) + '%', color: '#A78BFA' },
+    { label: "Rule of 40", val: (40 + (pl.ebitda/pl.rev*100)).toFixed(0), color: '#60A5FA' }
+  ];
+  const rEl = document.getElementById('pl-ratios');
+  rEl.innerHTML = '';
+  ratios.forEach(r => {
+    rEl.innerHTML += `<div class="pl-stat"><span class="pl-stat-label">${r.label}</span><span class="pl-stat-value" style="color:${r.color}">${r.val}</span></div>`;
+  });
+
+  document.getElementById('pl-arr-label').textContent =
+    `Model ARR: ${fmtM(pl.rev)} · Gross margin ${(pl.gp/pl.rev*100).toFixed(0)}% · EBITDA ${(pl.ebitda/pl.rev*100).toFixed(0)}%`;
+}
+
+// ═══════════════════════════════════════════════════════
+// KPI SCORECARD
+// ═══════════════════════════════════════════════════════
+function buildKPIs() {
+  ['retention','unit','efficiency'].forEach(group => {
+    const el = document.getElementById('kpi-'+group);
+    KPI_DEFS.filter(k => k.group === group).forEach(k => {
+      const card = document.createElement('div');
+      card.className = 'kpi-card';
+      card.innerHTML = `
+        <div class="kpi-label"><span class="kpi-status dot-${k.status}"></span>${k.label}</div>
+        <div class="kpi-val ${k.status}">${k.val}</div>
+        <div class="kpi-bench">${k.bench}</div>
+      `;
+      card.onclick = () => {
+        card.title = k.def;
+        alert(`${k.label}\n\n${k.def}\n\nBenchmark: ${k.bench}`);
+      };
+      el.appendChild(card);
+    });
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// INPUT MASK
+// ═══════════════════════════════════════════════════════
+function buildInputs() {
+  const root = document.getElementById('input-groups');
+  INPUT_SCHEMA.forEach(group => {
+    const panel = document.createElement('div');
+    panel.className = 'input-panel';
+    panel.style.marginBottom = '12px';
+    let rowsHtml = group.rows.map(row => `
+      <div class="input-row">
+        <div class="input-name">${row.name}<small>${row.hint}</small></div>
+        <input class="inp${row.pct?' pct':''}" type="number" id="inp_y1_${row.id}"
+          value="${row.yr1}" step="${row.pct?1:row.yr1>10000?1000:1}">
+        <input class="inp${row.pct?' pct':''}" type="number" id="inp_y2_${row.id}"
+          value="${row.yr2}" step="${row.pct?1:row.yr2>10000?1000:1}">
+      </div>
+    `).join('');
+    panel.innerHTML = `
+      <div class="input-group-header">
+        <div style="width:8px;height:8px;border-radius:50%;background:${group.color};flex-shrink:0"></div>
+        <div class="input-group-name">${group.group}</div>
+        <div style="margin-left:auto;font-size:10px;color:var(--text3);font-family:var(--font-m)">Y1 &nbsp;&nbsp; Y2</div>
+      </div>
+      <div class="input-body">${rowsHtml}</div>
+    `;
+    root.appendChild(panel);
+  });
+  updateLiveOutput();
+}
+
+function getVal(id) {
+  const el = document.getElementById(id);
+  return el ? parseFloat(el.value) || 0 : 0;
+}
+
+function updateLiveOutput() {
+  // Y1 computed P&L
+  const custStart = getVal('inp_y1_cust_start');
+  const custNew   = getVal('inp_y1_cust_new');
+  const arpaNew   = getVal('inp_y1_arpa_new');
+  const arpaEx    = getVal('inp_y1_arpa_ex');
+  const expRate   = getVal('inp_y1_exp_rate') / 100;
+  const churn     = getVal('inp_y1_churn') / 100;
+
+  const endCust  = custStart + custNew;
+  const subRev   = (custStart * arpaEx + custNew * arpaNew);
+  const expRev   = subRev * expRate;
+  const totalRev = subRev + expRev;
+
+  const hosting  = totalRev * (getVal('inp_y1_hosting')/100);
+  const supCost  = getVal('inp_y1_sup_hc') * getVal('inp_y1_sup_cost');
+  const psCogs   = totalRev * 0.08 * (1 - getVal('inp_y1_ps_margin')/100);
+  const totalCogs = hosting + supCost + psCogs;
+  const gp       = totalRev - totalCogs;
+
+  const smBase   = getVal('inp_y1_ae_hc') * getVal('inp_y1_ae_ote');
+  const comm     = subRev * (getVal('inp_y1_comm')/100);
+  const mktg     = getVal('inp_y1_mktg');
+  const sm       = smBase + comm + mktg;
+  const rd       = getVal('inp_y1_eng_hc') * getVal('inp_y1_eng_cost') + getVal('inp_y1_rd_other');
+  const ga       = getVal('inp_y1_ga_hc') * getVal('inp_y1_ga_cost') + getVal('inp_y1_legal') + getVal('inp_y1_office');
+  const ebitda   = gp - sm - rd - ga;
+
+  const nrr      = 1 - churn + expRate;
+
+  const stats = [
+    { label: "Total ARR (Y1)",    val: '$' + (totalRev/1e6).toFixed(2) + 'M', color: '#60A5FA' },
+    { label: "Gross profit",      val: '$' + (gp/1e6).toFixed(2) + 'M',       color: '#34D399' },
+    { label: "Gross margin %",    val: (gp/totalRev*100).toFixed(1) + '%',    color: gp/totalRev>.70 ? '#34D399' : '#FCD34D' },
+    { label: "EBITDA",            val: '$' + (ebitda/1e6).toFixed(2) + 'M',   color: ebitda>=0 ? '#34D399' : '#FB7185' },
+    { label: "EBITDA margin",     val: (ebitda/totalRev*100).toFixed(1) + '%',color: ebitda/totalRev>.10 ? '#34D399' : '#FCD34D' },
+    { label: "NRR",               val: (nrr*100).toFixed(1) + '%',            color: nrr>=1.10 ? '#34D399' : '#FCD34D' },
+    { label: "S&M spend",         val: '$' + (sm/1e6).toFixed(2) + 'M',       color: '#A78BFA' },
+    { label: "R&D spend",         val: '$' + (rd/1e6).toFixed(2) + 'M',       color: '#A78BFA' },
+    { label: "Ending customers",  val: endCust.toFixed(0),                    color: '#94A3B8' }
+  ];
+  const out = document.getElementById('live-output');
+  out.innerHTML = stats.map(s =>
+    `<div class="output-stat"><span class="output-label">${s.label}</span><span class="output-val" style="color:${s.color}">${s.val}</span></div>`
+  ).join('');
+
+  // also update P&L state for waterfall sync
+  plState.revenue = totalRev;
+  plState.cogsPct = totalCogs / totalRev;
+  plState.smPct   = sm / totalRev;
+  plState.rdPct   = rd / totalRev;
+  plState.gaPct   = ga / totalRev;
+}
+
+function recalculate() {
+  updateLiveOutput();
+  buildWaterfall();
+  // briefly flash the button
+  const btn = document.querySelector('.recalc-btn');
+  btn.textContent = '✓ Updated';
+  btn.style.background = 'linear-gradient(135deg,#059669,#0D9488)';
+  setTimeout(() => {
+    btn.textContent = '↻ Recalculate';
+    btn.style.background = 'linear-gradient(135deg,var(--blue),var(--teal))';
+  }, 1200);
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+buildOverview();
+buildMindMap();
+buildWaterfall();
+buildKPIs();
+buildInputs();
+</script>
+</body>
+</html>
