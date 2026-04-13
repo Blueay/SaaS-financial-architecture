@@ -1,7 +1,7 @@
 
 # SaaS Financial Architecture Model
 
-> A complete, open-source SaaS financial architecture — interactive dashboard, P&L model, KPI framework, and driver taxonomy — ready to fork and adapt.
+> A complete SaaS financial architecture — interactive dashboard, P&L model, KPI framework, and driver taxonomy — ready to fork and adapt.
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Version](https://img.shields.io/badge/version-1.0.0-green.svg)
