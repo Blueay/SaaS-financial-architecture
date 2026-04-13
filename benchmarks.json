@@ -1,0 +1,245 @@
+{
+  "_meta": {
+    "title": "SaaS Financial Architecture — Benchmark Reference",
+    "version": "1.0.0",
+    "sources": [
+      "OpenView Partners SaaS Benchmarks 2024",
+      "KeyBanc Capital Markets SaaS Survey 2024",
+      "Public SaaS company SEC filings (S-1 / 10-K)",
+      "Bessemer Venture Partners State of the Cloud 2024"
+    ],
+    "notes": "All rates in decimal form (e.g. 0.08 = 8%). Ranges represent 25th–75th percentile of public SaaS at each stage unless noted."
+  },
+
+  "stages": {
+    "early": { "label": "Early-stage", "arr_range": "$0–5M", "description": "Pre-Series A through Series A. High burn, rapid experimentation." },
+    "growth": { "label": "Growth-stage", "arr_range": "$5–50M", "description": "Series B through Series C. Scaling GTM, product-market fit confirmed." },
+    "scale":  { "label": "Scale / Pre-IPO", "arr_range": "$50M+", "description": "Series D+ or public. Operational leverage, path to profitability." }
+  },
+
+  "kpis": {
+    "arr_growth": {
+      "label": "ARR growth YoY",
+      "formula": "(Ending ARR − Beginning ARR) / Beginning ARR",
+      "unit": "rate",
+      "benchmarks": {
+        "early": { "good": 1.00, "warn": 0.60, "bad": 0.30 },
+        "growth": { "good": 0.50, "warn": 0.30, "bad": 0.15 },
+        "scale":  { "good": 0.25, "warn": 0.15, "bad": 0.08 }
+      },
+      "note": "T2D3 rule: triple, triple, double, double, double from $2M ARR"
+    },
+    "gross_margin": {
+      "label": "Gross margin",
+      "formula": "(Revenue − COGS) / Revenue",
+      "unit": "rate",
+      "benchmarks": {
+        "early": { "good": 0.65, "warn": 0.55, "bad": 0.45 },
+        "growth": { "good": 0.72, "warn": 0.62, "bad": 0.52 },
+        "scale":  { "good": 0.78, "warn": 0.68, "bad": 0.58 }
+      },
+      "note": "Pure software products typically 75–85%; service-heavy companies 60–70%"
+    },
+    "net_revenue_retention": {
+      "label": "Net Revenue Retention (NRR)",
+      "formula": "(Begin ARR + Expansion − Contraction − Churn) / Begin ARR",
+      "unit": "rate",
+      "benchmarks": {
+        "early": { "good": 1.00, "warn": 0.90, "bad": 0.80 },
+        "growth": { "good": 1.10, "warn": 1.00, "bad": 0.90 },
+        "scale":  { "good": 1.20, "warn": 1.10, "bad": 1.00 }
+      },
+      "note": "NRR >100% means existing customers grow ARR without new logos; >120% is best-in-class (Snowflake, Datadog)"
+    },
+    "gross_revenue_churn": {
+      "label": "Gross revenue churn (annual)",
+      "formula": "Revenue lost from churn + contraction / Beginning ARR",
+      "unit": "rate",
+      "invert": true,
+      "benchmarks": {
+        "early": { "good": 0.08, "warn": 0.12, "bad": 0.20 },
+        "growth": { "good": 0.05, "warn": 0.08, "bad": 0.15 },
+        "scale":  { "good": 0.02, "warn": 0.05, "bad": 0.10 }
+      }
+    },
+    "logo_churn": {
+      "label": "Logo churn rate (annual)",
+      "formula": "Churned customers / Beginning customer count",
+      "unit": "rate",
+      "invert": true,
+      "benchmarks": {
+        "early": { "good": 0.10, "warn": 0.15, "bad": 0.25 },
+        "growth": { "good": 0.06, "warn": 0.10, "bad": 0.18 },
+        "scale":  { "good": 0.03, "warn": 0.06, "bad": 0.12 }
+      }
+    },
+    "cac_payback": {
+      "label": "CAC payback period (months)",
+      "formula": "CAC / (ARPA × Gross Margin % / 12)",
+      "unit": "months",
+      "invert": true,
+      "benchmarks": {
+        "early": { "good": 24, "warn": 36, "bad": 48 },
+        "growth": { "good": 18, "warn": 24, "bad": 36 },
+        "scale":  { "good": 12, "warn": 18, "bad": 24 }
+      },
+      "note": "PLG companies often <12 months; enterprise >$100K ACV can tolerate 24+ months with high NRR"
+    },
+    "ltv_cac": {
+      "label": "LTV / CAC",
+      "formula": "LTV / CAC  where LTV = ARPA × GM% / Churn Rate",
+      "unit": "multiple",
+      "benchmarks": {
+        "early": { "good": 3.0, "warn": 1.5, "bad": 1.0 },
+        "growth": { "good": 4.0, "warn": 2.5, "bad": 1.5 },
+        "scale":  { "good": 5.0, "warn": 3.0, "bad": 2.0 }
+      }
+    },
+    "ebitda_margin": {
+      "label": "EBITDA margin",
+      "formula": "EBITDA / Revenue",
+      "unit": "rate",
+      "benchmarks": {
+        "early": { "good": -0.20, "warn": -0.40, "bad": -0.60 },
+        "growth": { "good": 0.00, "warn": -0.20, "bad": -0.40 },
+        "scale":  { "good": 0.15, "warn": 0.05, "bad": -0.05 }
+      }
+    },
+    "rule_of_40": {
+      "label": "Rule of 40",
+      "formula": "ARR Growth % + EBITDA Margin %",
+      "unit": "score",
+      "benchmarks": {
+        "early": { "good": 20, "warn": 10, "bad": 0 },
+        "growth": { "good": 35, "warn": 20, "bad": 10 },
+        "scale":  { "good": 40, "warn": 30, "bad": 20 }
+      }
+    },
+    "magic_number": {
+      "label": "Magic number",
+      "formula": "Net new ARR / Prior period S&M spend",
+      "unit": "ratio",
+      "benchmarks": {
+        "early": { "good": 0.50, "warn": 0.25, "bad": 0.10 },
+        "growth": { "good": 0.75, "warn": 0.50, "bad": 0.25 },
+        "scale":  { "good": 1.00, "warn": 0.75, "bad": 0.50 }
+      },
+      "note": ">1.0 = accelerate S&M; 0.5–0.75 = proceed with caution; <0.5 = fix product/churn first"
+    },
+    "pipeline_coverage": {
+      "label": "Pipeline coverage ratio",
+      "formula": "Total qualified pipeline / Quarterly ARR target",
+      "unit": "multiple",
+      "benchmarks": {
+        "early": { "good": 3.0, "warn": 2.0, "bad": 1.5 },
+        "growth": { "good": 3.5, "warn": 2.5, "bad": 2.0 },
+        "scale":  { "good": 4.0, "warn": 3.0, "bad": 2.5 }
+      }
+    },
+    "win_rate": {
+      "label": "Win rate (qualified opportunities)",
+      "formula": "Closed-won / Total qualified opportunities",
+      "unit": "rate",
+      "benchmarks": {
+        "early": { "good": 0.20, "warn": 0.12, "bad": 0.08 },
+        "growth": { "good": 0.28, "warn": 0.18, "bad": 0.12 },
+        "scale":  { "good": 0.35, "warn": 0.25, "bad": 0.15 }
+      }
+    }
+  },
+
+  "cogs_benchmarks": {
+    "hosting_devops": {
+      "label": "Hosting / DevOps as % revenue",
+      "unit": "rate",
+      "invert": true,
+      "ranges": {
+        "early": { "good": 0.12, "warn": 0.18, "bad": 0.25 },
+        "growth": { "good": 0.08, "warn": 0.12, "bad": 0.18 },
+        "scale":  { "good": 0.05, "warn": 0.08, "bad": 0.12 }
+      }
+    },
+    "technical_support": {
+      "label": "Technical support as % revenue",
+      "unit": "rate",
+      "invert": true,
+      "ranges": {
+        "early": { "good": 0.10, "warn": 0.15, "bad": 0.20 },
+        "growth": { "good": 0.07, "warn": 0.10, "bad": 0.15 },
+        "scale":  { "good": 0.04, "warn": 0.07, "bad": 0.10 }
+      }
+    }
+  },
+
+  "opex_benchmarks": {
+    "sm_pct_revenue": {
+      "label": "Sales & marketing as % revenue",
+      "unit": "rate",
+      "ranges": {
+        "early": { "typical": "40–60%", "note": "Heavy investment phase" },
+        "growth": { "typical": "30–45%", "note": "Scaling efficiency" },
+        "scale":  { "typical": "20–30%", "note": "Mature GTM motion" }
+      }
+    },
+    "rd_pct_revenue": {
+      "label": "R&D as % revenue",
+      "unit": "rate",
+      "ranges": {
+        "early": { "typical": "25–40%", "note": "High product investment" },
+        "growth": { "typical": "18–28%", "note": "Platform maturation" },
+        "scale":  { "typical": "12–20%", "note": "Leveraged engineering org" }
+      }
+    },
+    "ga_pct_revenue": {
+      "label": "G&A as % revenue",
+      "unit": "rate",
+      "ranges": {
+        "early": { "typical": "12–20%", "note": "Fixed overhead is large vs revenue" },
+        "growth": { "typical": "8–14%", "note": "Scaling to revenue" },
+        "scale":  { "typical": "5–9%", "note": "Leveraged structure" }
+      }
+    }
+  },
+
+  "personnel_burdening": {
+    "description": "Multiply base salary by these factors to get fully burdened cost",
+    "components": {
+      "base_salary":              { "pct_of_base": 1.000, "note": "100% baseline" },
+      "payroll_taxes":            { "pct_of_base": 0.0765, "note": "US: FICA (6.2% SS + 1.45% Medicare) — employer share" },
+      "health_dental_vision":     { "pct_of_base": 0.10, "note": "Varies widely; $8–18K/yr/FTE typical US" },
+      "retirement_401k_match":    { "pct_of_base": 0.03, "note": "Typical 3–4% match" },
+      "life_disability_insurance":{ "pct_of_base": 0.01, "note": "~$500–1,500/yr" },
+      "employee_equity_expense":  { "pct_of_base": 0.05, "note": "Stock-based compensation, varies significantly" },
+      "travel_and_training":      { "pct_of_base": 0.04, "note": "Conferences, L&D, SKOs" },
+      "internal_software_subs":   { "pct_of_base": 0.02, "note": "Seat licenses, SaaS productivity tools" },
+      "recruiting_amortized":     { "pct_of_base": 0.02, "note": "~$10–25K per hire amortized over avg tenure" }
+    },
+    "total_multiplier_range": { "low": 1.25, "mid": 1.35, "high": 1.50 },
+    "note": "Rule of thumb: multiply base salary by 1.3x–1.4x for fully burdened cost in US tech"
+  },
+
+  "revenue_driver_ranges": {
+    "arpa": {
+      "label": "Average Revenue Per Account (ARPA)",
+      "smb": { "range": "$1,200–$12,000", "motion": "Self-serve / PLG" },
+      "mid_market": { "range": "$12,000–$60,000", "motion": "Inside sales" },
+      "enterprise": { "range": "$60,000–$500,000+", "motion": "Field sales + SC" }
+    },
+    "acv": {
+      "label": "Annual Contract Value (ACV)",
+      "note": "ACV = ARR for 1-year contracts; for multi-year, ACV = TCV / contract length"
+    },
+    "expansion_rate": {
+      "label": "Expansion MRR rate",
+      "plg": { "typical": "5–15%", "note": "Product-led growth; usage-based" },
+      "sales_led": { "typical": "3–8%", "note": "Proactive CSM + upsell motion" }
+    },
+    "sales_capacity": {
+      "ae_quota_range": "$400,000–$1,200,000",
+      "quota_attainment_median": "65–75%",
+      "ramp_time_months": "3–6",
+      "ae_to_se_ratio": "3:1 to 5:1",
+      "ae_to_sdr_ratio": "2:1 to 4:1"
+    }
+  }
+}
